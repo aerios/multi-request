@@ -37,11 +37,16 @@ process.on("message",function(letter){
 				message:result
 			})
 		}).catch(function(err){
-			process.send({
-				id:id,
-				message:err.toString(),
-				is_error:true
-			})
+			if(err.message == "channel closed"){
+				process.exit();
+			}else{
+				process.send({
+					id:id,
+					message:err.toString(),
+					is_error:true
+				})	
+			}
+			
 		})	
 	}catch(e){
 		process.exit();

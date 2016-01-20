@@ -3,24 +3,25 @@ var underscore = require("underscore")
 var MyProcess = require('mprocess');
 var Promise = require("bluebird")
 var uuidLength = 10;
-var maxProcessCount = require("os").cpus().length;
+var cpuCount = require("os").cpus().length;
 var uuidSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 var Engine = {};
 var Mailbox = {};
+var ProcessLetterMap = {};
 var ProcessList = [];
 var currentProcess = 0;
-var activeProcess = 0;
+var queuedProcess = 0;
 var cpuLoad = 2;
 var processCount = 0;
-
+var maxProcessCount = cpuLoad * cpuCount
 // mailbox functionality
 
 function upProcess(){
-	activeProcess += 1
+	queuedProcess += 1
 }
 
 function downProcess(){
-	activeProcess -= 1
+	queuedProcess -= 1
 }
 
 function generateUUID(){
@@ -66,6 +67,14 @@ function processReply(err,letter){
 	downProcess();
 }
 
+function deliverDeadLetter(procIndex){
+	var letters = ProcessLetterMap[procIndex].slice(0);
+	ProcessLetterMap[procIndex] = []
+	letters.forEach(function(letter){
+		processReply(new Error("Worker died while processing request"),letter);
+	})
+}
+
 // end mailbox functionality
 
 
@@ -76,14 +85,17 @@ function createProcess(procIndex){
 		processReply(null,letter);
 	})
 	ProcessList[procIndex] = proc;
-	proc.done(function(){
+	ProcessLetterMap[procIndex] = [];
+	proc.done(function(){		
+		deliverDeadLetter(procIndex)
 		createProcess(procIndex);
-	})
+	})	
 	return proc;
 }
 
 function sendLetter(letter){	
-	var proc = ProcessList[currentProcess];
+	var proc = ProcessList[currentProcess];	
+	ProcessLetterMap[currentProcess].push(letter);
 	proc.getProcess().send(letter);
 	currentProcess += 1;
 	if(currentProcess >= ProcessList.length){
@@ -105,10 +117,12 @@ function spawn(){
 }
 
 function throttledSpawn(){
-	console.log(activeProcess,processCount,cpuLoad,maxProcessCount)
-	if(activeProcess >= (processCount) && processCount < maxProcessCount){
+
+	if((processCount * 2) < queuedProcess && processCount < maxProcessCount){
 		spawn();
 	}
+	// console.log((processCount * 2) ,"<", queuedProcess ,"&&", processCount ,"<", maxProcessCount)
+	// console.log("Worker count :",processCount,"Queued Request :",queuedProcess)
 }
 
 function doRequest(){
@@ -124,8 +138,7 @@ function doRequest(){
 	var letter = createMessage(data);
 	var id = letter.id;
 	var pr = new Promise(function(resolve,reject){
-		putMailbox(pr,resolve,reject,letter);
-		sendLetter(letter);
+		putMailbox(pr,resolve,reject,letter);		
 	})
 	var idTimeout = setTimeout(function(){
 		processReply(new Error("Timeout detected"),letter);
@@ -139,14 +152,23 @@ function doRequest(){
 		})
 	}
 	throttledSpawn()
+	sendLetter(letter);
 	return pr
 }
+
+// process utility
 
 function getProcessCount(){
 	return ProcessList.length;
 }
 
+function changeCpuLoad(i){
+	cpuLoad = i;
+	maxProcessCount = i * cpuCount;
+}
+
 Engine = doRequest
 Engine.getWorkerCount = getProcessCount;
-init()
+Engine.changeCpuLoad = changeCpuLoad;
+Engine.getCpuLoad = function(){return cpuLoad}
 module.exports = Engine;
