@@ -1,0 +1,23 @@
+{
+  "name": "multi-request",
+  "version": "1.2.3",
+  "description": "multi-process request.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test --timeout=90000"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "^3.1.1",
+    "mprocess": "^1.3.0",
+    "request": "^2.67.0",
+    "throttle-exec": "^2.3.0",
+    "underscore": "^1.8.3"
+  },
+  "devDependencies": {
+    "chai": "^3.4.1",
+    "mocha": "^2.3.4",
+    "sinon": "^1.17.2"
+  }
+}
