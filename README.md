@@ -28,4 +28,6 @@ MRequest("http://google.com").then(function(result){
 
 Multi Process Request initially spawn 2 * CPU core count of the host. For each API invocation, parameters that passed to API will be sent to a child process based on round-robin technique. Multi Process Request support request.js parameter, but still untested for file handling.
 
+## GitHub
 
+https://github.com/aerios/multi-request
