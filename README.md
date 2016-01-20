@@ -4,9 +4,9 @@ A request.js (https://www.npmjs.com/package/request) wrapper that support multi 
 
 ## Usage
 
-npm install multi-request
+`npm install multi-request`
 
-var MRequest = require("multi-request")
+`var MRequest = require("multi-request")`
 
 ### Callback style
 <pre>
