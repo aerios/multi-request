@@ -32,7 +32,7 @@ function downMailboxCount(id){
 
 function createProcess(procIndex){
 	MailboxCount[procIndex] = {id:procIndex,count:0};
-	var proc = new MyProcess("node",[__dirname+"/RequestWorker.js"],MyProcess.FORK);	
+	var proc = new MyProcess("node",[__dirname+"/Worker.js"],MyProcess.FORK);	
 	proc.run();	
 	proc.done(function(){
 		createProcess(procIndex);
