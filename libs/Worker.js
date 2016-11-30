@@ -29,7 +29,7 @@ module.exports = Engine;
 
 process.on("message",function(letter){
 	var id = letter.id;
-	var data = letter.message;
+	var data = letter.data;
 	try{
 		createRequest.apply(null,data).then(function(result){
 			process.send({
