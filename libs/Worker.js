@@ -34,7 +34,7 @@ process.on("message",function(letter){
 		createRequest.apply(null,data).then(function(result){
 			process.send({
 				id:id,
-				message:result
+				data:result
 			})
 		}).catch(function(err){
 			if(err.message == "channel closed"){
